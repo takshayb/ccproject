@@ -28,6 +28,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.chatapp.CheckSignedIn
 import com.example.chatapp.DestinationScreen
 import com.example.chatapp.R
 import com.example.chatapp.navigateTo
@@ -35,6 +36,7 @@ import com.example.chatapp.ui.theme.LCViewModel
 
 @Composable
 fun LoginScreen(navController: NavController,vm: LCViewModel) {
+    CheckSignedIn(vm = vm, navController = navController )
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -43,12 +45,7 @@ fun LoginScreen(navController: NavController,vm: LCViewModel) {
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val nameState = remember {
-                mutableStateOf(TextFieldValue())
-            }
-            val numberState = remember {
-                mutableStateOf(TextFieldValue())
-            }
+
             val emailState = remember {
                 mutableStateOf(TextFieldValue())
             }
@@ -84,16 +81,21 @@ fun LoginScreen(navController: NavController,vm: LCViewModel) {
                 label = { Text(text = "Password")},
                 modifier = Modifier.padding(8.dp)
             )
-            Button(onClick = { vm.signUp(
-                nameState.value.text,
-                numberState.value.text,
-                emailState.value.text,
-                passwordState.value.text,
-            ) },
+            Button(onClick = {
+                             vm.loginIn(emailState.value.text,passwordState.value.text)
+            },
                 modifier = Modifier.padding(8.dp)) {
                 Text(text = "LOG IN")
 
             }
+            Text(text = "New User? Sign Up ->",
+                color = Color.Blue,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .padding(8.dp)
+                    .clickable {
+                        navigateTo(navController, DestinationScreen.SignUp.route)
+                    })
 
         }
     }

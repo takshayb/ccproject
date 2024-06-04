@@ -21,20 +21,20 @@ import kotlin.math.sign
 @HiltViewModel
 class LCViewModel @Inject constructor(
     val auth: FirebaseAuth,
-    var db : FirebaseFirestore
+    var db: FirebaseFirestore
 ) : ViewModel() {
-
 
 
     var inProgress = mutableStateOf(false)
     var signIn = mutableStateOf(false)
     val eventMutableState = mutableStateOf<Event<String>?>(null)
     val userData = mutableStateOf<UserData?>(null)
+
     init {
 
         val currentUser = auth.currentUser
-        signIn.value = currentUser !=null
-        currentUser?.uid?.let{
+        signIn.value = currentUser != null
+        currentUser?.uid?.let {
             getUserData(it)
         }
     }
@@ -42,25 +42,24 @@ class LCViewModel @Inject constructor(
 
     fun signUp(name: String, number: String, email: String, password: String) {
         inProgress.value = true
-        if(name.isEmpty() or number.isEmpty() or email.isEmpty()or password.isEmpty()){
+        if (name.isEmpty() or number.isEmpty() or email.isEmpty() or password.isEmpty()) {
             handleException(customMessage = "Please fill all the fields")
             return
         }
 
         inProgress.value = true
-        db.collection(USER_NODE).whereEqualTo("number",number).get().addOnSuccessListener {
-            if(it.isEmpty){
+        db.collection(USER_NODE).whereEqualTo("number", number).get().addOnSuccessListener {
+            if (it.isEmpty) {
                 auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {
                     if (it.isSuccessful) {
                         signIn.value = true
                         createOrUpdateProfile(name, number)
                         Log.d("TAG", "signUp: User Logged In")
-                    }
-                    else{
+                    } else {
                         handleException(it.exception, customMessage = "Sign Up Failed")
                     }
                 }
-            }else{
+            } else {
                 handleException(customMessage = "Number Already Exists")
                 inProgress.value = false
             }
@@ -68,40 +67,64 @@ class LCViewModel @Inject constructor(
 
     }
 
-    fun createOrUpdateProfile(name:String?=null, number:String?=null, imageurl :String?=null){
+    fun loginIn(email: String, password: String) {
+        if (email.isEmpty() or password.isEmpty()) {
+            handleException(customMessage = "Please fill all the fields")
+        } else {
+            inProgress.value = true
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener{
+                    if(it.isSuccessful){
+                        signIn.value = true
+                        inProgress.value = false
+                        auth.currentUser?.uid?.let{
+                            getUserData(it)
+                        }
+
+                    }else{
+                        handleException(it.exception,"Login Failed")
+                    }
+                }
+        }
+    }
+
+    fun createOrUpdateProfile(
+        name: String? = null,
+        number: String? = null,
+        imageurl: String? = null
+    ) {
         var uid = auth.currentUser?.uid
         val userData = UserData(
             userId = uid,
-            name = name?:userData.value?.name,
-            number = number?:userData.value?.number,
-            imageurl = imageurl?:userData.value?.imageurl
+            name = name ?: userData.value?.name,
+            number = number ?: userData.value?.number,
+            imageurl = imageurl ?: userData.value?.imageurl
 
         )
-        uid?.let{
+        uid?.let {
             inProgress.value = true
             db.collection(USER_NODE).document(uid).get().addOnSuccessListener {
-                if(it.exists()){
+                if (it.exists()) {
 
-                }else{
+                } else {
                     db.collection(USER_NODE).document(uid).set(userData)
                     inProgress.value = false
                     getUserData(uid)
                 }
             }
                 .addOnFailureListener {
-                    handleException(it,"Cannot Retrieve User")
+                    handleException(it, "Cannot Retrieve User")
                 }
         }
-}
+    }
 
-    private fun getUserData(uid:String) {
+    private fun getUserData(uid: String) {
         inProgress.value = true
-        db.collection(USER_NODE).document(uid).addSnapshotListener{
-            value,error->
-            if(error!=null){
-                handleException(error,"Cannot Retrieve User")
+        db.collection(USER_NODE).document(uid).addSnapshotListener { value, error ->
+            if (error != null) {
+                handleException(error, "Cannot Retrieve User")
             }
-            if(value!=null){
+            if (value != null) {
                 var user = value.toObject<UserData>()
                 userData.value = user
                 inProgress.value = false
@@ -109,11 +132,11 @@ class LCViewModel @Inject constructor(
         }
     }
 
-    fun handleException(exception: Exception?=null,customMessage :String = ""){
-        Log.d("LiveChatApp","live chat exception:",exception)
+    fun handleException(exception: Exception? = null, customMessage: String = "") {
+        Log.d("LiveChatApp", "live chat exception:", exception)
         exception?.printStackTrace()
-        val errorMsg = exception?.localizedMessage?:""
-        val message = if(customMessage.isNullOrEmpty()) errorMsg else customMessage
+        val errorMsg = exception?.localizedMessage ?: ""
+        val message = if (customMessage.isNullOrEmpty()) errorMsg else customMessage
         eventMutableState.value = Event(message)
         inProgress.value = false
     }

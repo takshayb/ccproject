@@ -17,7 +17,9 @@ import com.example.chatapp.ui.theme.LCViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import screens.ChatListScreen
 import screens.LoginScreen
+import screens.ProfileScreen
 import screens.SignUpScreen
+import screens.StatusScreen
 
 sealed class DestinationScreen(var route: String){
     object SignUp : DestinationScreen("signup")
@@ -63,7 +65,13 @@ class MainActivity : ComponentActivity() {
                 LoginScreen(navController,vm)
             }
             composable(DestinationScreen.ChatList.route){
-                ChatListScreen()
+                ChatListScreen(navController,vm)
+            }
+            composable(DestinationScreen.StatusList.route){
+                StatusScreen(navController,vm)
+            }
+            composable(DestinationScreen.Profile.route){
+                ProfileScreen(navController,vm)
             }
 
         }

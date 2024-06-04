@@ -64,7 +64,7 @@ fun SignUpScreen(navController: NavController, vm: LCViewModel) {
             }
             val focus = LocalFocusManager.current
             Image(
-                painter = painterResource(id = R.drawable.chat), contentDescription = null,
+                painter = painterResource(id = R.drawable.user), contentDescription = null,
                 modifier = Modifier
                     .width(200.dp)
                     .padding(top = 16.dp)
