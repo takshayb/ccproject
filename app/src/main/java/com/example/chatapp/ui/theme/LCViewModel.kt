@@ -1,5 +1,6 @@
 package com.example.chatapp.ui.theme
 
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -10,18 +11,22 @@ import com.example.chatapp.navigateTo
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
+import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import data.Event
 import data.USER_NODE
 import data.UserData
 import java.lang.Exception
+import java.net.URI
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.math.sign
 
 @HiltViewModel
 class LCViewModel @Inject constructor(
     val auth: FirebaseAuth,
-    var db: FirebaseFirestore
+    var db: FirebaseFirestore,
+    val storage : FirebaseStorage
 ) : ViewModel() {
 
 
@@ -87,7 +92,27 @@ class LCViewModel @Inject constructor(
                 }
         }
     }
+    fun uploadProfileImage(uri: Uri){
+        uploadImage(uri){
+            createOrUpdateProfile(imageurl = it.toString())
 
+        }
+    }
+
+    fun uploadImage(uri: Uri,onSuccess:(Uri)->Unit){
+        val storageref = storage.reference
+        val uuid = UUID.randomUUID()
+        val imageRef = storageref.child("images/$uuid")
+        val uploadTask = imageRef.putFile(uri)
+        uploadTask.addOnSuccessListener {
+            val result = it.metadata?.reference?.downloadUrl
+            result?.addOnSuccessListener(onSuccess)
+
+            }
+            .addOnFailureListener{
+                handleException(it)
+        }
+    }
     fun createOrUpdateProfile(
         name: String? = null,
         number: String? = null,
@@ -133,12 +158,19 @@ class LCViewModel @Inject constructor(
     }
 
     fun handleException(exception: Exception? = null, customMessage: String = "") {
-        Log.d("LiveChatApp", "live chat exception:", exception)
+        Log.d("TAG", "live chat exception:", exception)
         exception?.printStackTrace()
         val errorMsg = exception?.localizedMessage ?: ""
         val message = if (customMessage.isNullOrEmpty()) errorMsg else customMessage
         eventMutableState.value = Event(message)
         inProgress.value = false
+    }
+
+    fun logout() {
+        auth.signOut()
+        signIn.value = false
+        userData.value = null
+        eventMutableState.value = Event("Logged Out")
     }
 }
 

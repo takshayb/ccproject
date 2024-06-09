@@ -110,7 +110,8 @@ fun SignUpScreen(navController: NavController, vm: LCViewModel) {
                 numberState.value.text,
                 emailState.value.text,
                 passwordState.value.text,
-            ) },
+            )
+            },
                 modifier = Modifier.padding(8.dp)) {
                 Text(text = "SIGN UP")
 
@@ -126,7 +127,5 @@ fun SignUpScreen(navController: NavController, vm: LCViewModel) {
 
         }
     }
-    if(vm.inProgress.value){
-        CommonProgressBar()
-    }
+
 }

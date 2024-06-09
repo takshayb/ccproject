@@ -8,6 +8,5 @@ import com.example.chatapp.ui.theme.LCViewModel
 
 @Composable
 fun ChatListScreen(navController: NavController, vm : LCViewModel) {
-    Text(text = "ChatList Screen")
     BottomNavigationMenu(selectedItem = BottomNavigationItem.CHATLIST, navController = navController)
 }
